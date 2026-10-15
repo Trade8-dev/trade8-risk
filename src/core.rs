@@ -3,12 +3,12 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Risk
 // SPDX-License-Identifier: Apache-2.0
 
-//! Risk snapshot caches + the check pipeline — the stateless
-//! `authorize` core. The HTTP surface and cache-invalidation consumers
-//! live in main.rs; this module owns the pure verdict logic so it is
-//! unit-testable without tokio.
-//!
-//! Design: `../risk/DESIGN.md` §2, §4.
+// Risk snapshot caches + the check pipeline — the stateless
+// `authorize` core. The HTTP surface and cache-invalidation consumers
+// live in main.rs; this module owns the pure verdict logic so it is
+// unit-testable without tokio.
+//
+// Design: `../risk/DESIGN.md` §2, §4.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
