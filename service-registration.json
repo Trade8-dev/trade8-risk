@@ -2,7 +2,11 @@
   "vertical": "trade8",
   "services": [
     {
-      "service_type": "trade8:risk"
+      "service_type": "trade8:risk",
+      "telemetry_property": {
+        "slug": "risk",
+        "name": "Trade8:Risk Telemetry"
+      }
     }
   ]
 }
