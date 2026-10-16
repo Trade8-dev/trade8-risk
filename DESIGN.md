@@ -89,7 +89,7 @@ sequenceDiagram
     E->>E: 1 trader state → 2 symbol allowlist/blocked → 3 destination → 3b market → 3c cancel-denial → 3d order-type/TIF → (opens: 4 buying power → 5 open orders → 6 order shares → 7 position shares) → 8 short locate + uptick
     E-->>A: verdict {allowed, trace, remaining_bp} or {deny, code, trace}
     A-->>D: 200 verdict
-    Note over D,A: No DB touched; no cross-service calls on this path
+    Note over D,SN: No DB touched, no cross-service calls on this path
 ```
 
 ### Mutation lifecycle — limits / trader states
