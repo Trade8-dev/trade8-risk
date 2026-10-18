@@ -14,6 +14,7 @@ mod admin_ui;
 mod consumers;
 mod core;
 mod registration;
+mod openapi;
 mod store;
 
 use sqlx::Acquire;
@@ -96,10 +97,21 @@ fn extend_router(app: Router<Arc<RiskState>>, _state: Arc<RiskState>) -> Router<
             get(|| async { Json(serde_json::json!({"status": "ok", "service": "trade8:risk", "version": sentin8::build_info::id(), "build": sentin8::build_info::build_hash()})) }),
         )
 }
+#[utoipa::path(
+    post,
+    path = "/v1/authorize",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "risk",
+)]
 
 /// The hot-path authorize call. M2M-only (Desk / Func) — the BFF does not
 /// proxy this route; scope check enforces the service scope.
-async fn authorize(
+pub(crate) async fn authorize(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
     Json(req): Json<AuthorizeRequest>,
@@ -115,8 +127,19 @@ async fn authorize(
     let verdict = st.engine.authorize(&req);
     Ok(Json(verdict))
 }
+#[utoipa::path(
+    get,
+    path = "/v1/trader-state",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "risk",
+)]
 
-async fn trader_state(
+pub(crate) async fn trader_state(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
@@ -137,7 +160,18 @@ async fn trader_state(
     Ok(Json(serde_json::json!({"traders": states})))
 }
 
-async fn trader_state_one(
+#[utoipa::path(
+    get,
+    path = "/v1/trader-state/{usr_id}",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "risk",
+)]
+pub(crate) async fn trader_state_one(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
     Path(usr_id): Path<String>,
@@ -155,7 +189,18 @@ async fn trader_state_one(
     Ok(Json(serde_json::json!({"usr_id": usr_id, "state": state})))
 }
 
-async fn set_trader_state(
+#[utoipa::path(
+    post,
+    path = "/v1/trader-state",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "risk",
+)]
+pub(crate) async fn set_trader_state(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
     Json(body): Json<serde_json::Value>,
@@ -203,8 +248,19 @@ async fn set_trader_state(
     tx.commit().await.ok(); // dropping an uncommitted tx rolls back
     Ok(Json(serde_json::json!({"usr_id": usr, "state": state})))
 }
+#[utoipa::path(
+    get,
+    path = "/v1/limits",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "risk",
+)]
 
-async fn list_limits(
+pub(crate) async fn list_limits(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
 ) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
@@ -219,8 +275,19 @@ async fn list_limits(
     let snap = st.engine.current();
     Ok(Json(serde_json::json!({"limits": snap.limits})))
 }
+#[utoipa::path(
+    post,
+    path = "/v1/limits",
+    responses(
+        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 401, description = "Not authenticated"),
+        (status = 403, description = "Forbidden"),
+    ),
+    security(),
+    tag = "risk",
+)]
 
-async fn create_limit(
+pub(crate) async fn create_limit(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
     Json(body): Json<trade8::contracts::risk::LimitRow>,
