@@ -65,7 +65,7 @@ fn card(title: &str, body: &str) -> RemoteWidget {
     get,
     path = "/v1/admin/ui/{page}",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "OK", body = sentin8::rfw::AdminUiResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -78,7 +78,7 @@ pub async fn get_admin_ui(
     State(_st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
     Path(page): Path<String>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<AdminUiResponse>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&_st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &_st.core.admin.policy,
@@ -161,9 +161,7 @@ pub async fn get_admin_ui(
             ))
         }
     };
-    Ok(Json(
-        serde_json::to_value(AdminUiResponse::page(def)).unwrap_or_default(),
-    ))
+    Ok(Json(AdminUiResponse::page(def)))
 }
 
 type Qp = std::collections::HashMap<String, String>;
@@ -171,7 +169,7 @@ type Qp = std::collections::HashMap<String, String>;
     get,
     path = "/v1/admin/limits",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Admin rows", body = Vec<serde_json::Value>),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -183,7 +181,7 @@ type Qp = std::collections::HashMap<String, String>;
 pub async fn admin_limits(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<Vec<serde_json::Value>>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -216,7 +214,7 @@ pub async fn admin_limits(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(serde_json::json!(rows
+    Ok(Json(rows
         .into_iter()
         .map(
             |(usr_id, office_id, kind, value, override_value, disabled)| {
@@ -226,13 +224,13 @@ pub async fn admin_limits(
                 })
             }
         )
-        .collect::<Vec<_>>())))
+        .collect::<Vec<_>>()))
 }
 #[utoipa::path(
     get,
     path = "/v1/admin/traders",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Admin rows", body = Vec<serde_json::Value>),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -244,7 +242,7 @@ pub async fn admin_limits(
 pub async fn admin_traders(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<Vec<serde_json::Value>>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -276,7 +274,7 @@ pub async fn admin_traders(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(serde_json::json!(rows
+    Ok(Json(rows
         .into_iter()
         .map(|(usr_id, state, reason, set_by, at)| {
             serde_json::json!({
@@ -284,13 +282,13 @@ pub async fn admin_traders(
                 "set_by": set_by, "at": at,
             })
         })
-        .collect::<Vec<_>>())))
+        .collect::<Vec<_>>()))
 }
 #[utoipa::path(
     get,
     path = "/v1/admin/restrictions",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Admin rows", body = Vec<serde_json::Value>),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -303,7 +301,7 @@ pub async fn admin_restrictions(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
     Query(q): Query<Qp>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<Vec<serde_json::Value>>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -343,7 +341,7 @@ pub async fn admin_restrictions(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(serde_json::json!(rows
+    Ok(Json(rows
         .into_iter()
         .map(
             |(level, level_id, restriction, symbol_id, destination_id, disabled)| {
@@ -354,13 +352,13 @@ pub async fn admin_restrictions(
                 })
             }
         )
-        .collect::<Vec<_>>())))
+        .collect::<Vec<_>>()))
 }
 #[utoipa::path(
     get,
     path = "/v1/admin/levels",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Admin rows", body = Vec<serde_json::Value>),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -372,7 +370,7 @@ pub async fn admin_restrictions(
 pub async fn admin_levels(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<Vec<serde_json::Value>>, (axum::http::StatusCode, String)> {
     let a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -403,7 +401,7 @@ pub async fn admin_levels(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(serde_json::json!(rows
+    Ok(Json(rows
         .into_iter()
         .map(|(level_id, threshold, actions)| {
             serde_json::json!({
@@ -411,13 +409,13 @@ pub async fn admin_levels(
                 "actions": actions.split(',').collect::<Vec<_>>(),
             })
         })
-        .collect::<Vec<_>>())))
+        .collect::<Vec<_>>()))
 }
 #[utoipa::path(
     get,
     path = "/v1/admin/exposure",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Admin rows", body = Vec<serde_json::Value>),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -429,7 +427,7 @@ pub async fn admin_levels(
 pub async fn admin_exposure(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<Vec<serde_json::Value>>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -453,5 +451,5 @@ pub async fn admin_exposure(
             })
         })
         .collect();
-    Ok(Json(serde_json::json!(rows)))
+    Ok(Json(rows))
 }

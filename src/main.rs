@@ -97,11 +97,80 @@ fn extend_router(app: Router<Arc<RiskState>>, _state: Arc<RiskState>) -> Router<
             get(|| async { Json(serde_json::json!({"status": "ok", "service": "trade8:risk", "version": sentin8::build_info::id(), "build": sentin8::build_info::build_hash()})) }),
         )
 }
+// ── Typed response DTOs (OAPEC-9) ──────────────────────────────────────
+
+/// Liveness/build identity (OAPEC-9 typed body).
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct HealthInfo {
+    /// Always `ok` while serving.
+    pub status: String,
+    /// The service identifier.
+    pub service: String,
+    /// The build version.
+    pub version: String,
+    /// The build hash.
+    pub build: String,
+}
+
+/// One trader-state row.
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct TraderStateRow {
+    /// The trader principal.
+    pub usr_id: String,
+    /// The state document.
+    pub state: trade8::contracts::TraderState,
+}
+
+/// All trader states.
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct TraderStatesResponse {
+    /// The trader rows.
+    pub traders: Vec<TraderStateRow>,
+}
+
+/// One trader state read.
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct TraderStateResponse {
+    /// The trader principal.
+    pub usr_id: String,
+    /// The state.
+    pub state: trade8::contracts::TraderState,
+}
+
+/// Set-state request.
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
+pub struct SetTraderStateRequest {
+    /// The trader.
+    pub usr_id: String,
+    /// The new state.
+    pub state: trade8::contracts::TraderState,
+    /// Manual comment (audit only).
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+/// Limits envelope.
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct LimitsResponse {
+    /// The configured limits.
+    pub limits: Vec<trade8::contracts::risk::LimitRow>,
+}
+
+/// Limits mutation ack.
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct CreateLimitAck {
+    /// The created limit id.
+    pub id: uuid::Uuid,
+    /// Always `ok`.
+    pub status: String,
+}
+
 #[utoipa::path(
     post,
     path = "/v1/authorize",
+    request_body = trade8::contracts::risk::AuthorizeRequest,
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Authorization verdict", body = trade8::contracts::risk::AuthorizeVerdict),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -131,7 +200,7 @@ pub(crate) async fn authorize(
     get,
     path = "/v1/trader-state",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Trader states", body = TraderStatesResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -142,7 +211,7 @@ pub(crate) async fn authorize(
 pub(crate) async fn trader_state(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<TraderStatesResponse>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -152,19 +221,22 @@ pub(crate) async fn trader_state(
     )
     .await?;
     let snap = st.engine.current();
-    let states: Vec<(&String, _)> = snap
+    let traders: Vec<TraderStateRow> = snap
         .trader_states
         .iter()
-        .map(|(k, v)| (k, serde_json::to_value(v).unwrap_or_default()))
+        .map(|(k, v)| TraderStateRow {
+            usr_id: k.clone(),
+            state: v.clone(),
+        })
         .collect();
-    Ok(Json(serde_json::json!({"traders": states})))
+    Ok(Json(TraderStatesResponse { traders }))
 }
 
 #[utoipa::path(
     get,
     path = "/v1/trader-state/{usr_id}",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Trader state", body = TraderStateResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -175,7 +247,7 @@ pub(crate) async fn trader_state_one(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
     Path(usr_id): Path<String>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<TraderStateResponse>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -186,14 +258,17 @@ pub(crate) async fn trader_state_one(
     .await?;
     let snap = st.engine.current();
     let state = snap.trader_state(&usr_id);
-    Ok(Json(serde_json::json!({"usr_id": usr_id, "state": state})))
+    Ok(Json(TraderStateResponse {
+        usr_id,
+        state,
+    }))
 }
 
 #[utoipa::path(
     post,
     path = "/v1/trader-state",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "State set", body = TraderStateResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -203,8 +278,8 @@ pub(crate) async fn trader_state_one(
 pub(crate) async fn set_trader_state(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
-    Json(body): Json<serde_json::Value>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+    Json(body): Json<SetTraderStateRequest>,
+) -> Result<Json<TraderStateResponse>, (axum::http::StatusCode, String)> {
     let auth = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -214,13 +289,9 @@ pub(crate) async fn set_trader_state(
     )
     .await?;
     let env = auth.env_id();
-    let usr = body.get("usr_id").and_then(|v| v.as_str()).ok_or((
-        axum::http::StatusCode::BAD_REQUEST,
-        "usr_id required".to_string(),
-    ))?;
-    let state: TraderState = serde_json::from_value(body.get("state").cloned().unwrap_or_default())
-        .map_err(|_| (axum::http::StatusCode::BAD_REQUEST, "invalid state".into()))?;
-    let reason = body.get("reason").and_then(|v| v.as_str());
+    let usr = body.usr_id.as_str();
+    let state: TraderState = body.state;
+    let reason = body.reason.as_deref();
     // DB write + outbox event, then the snapshot swap (DESIGN.md §2).
     let mut conn = st
         .core
@@ -246,13 +317,16 @@ pub(crate) async fn set_trader_state(
     st.engine.publish(snap);
     tracing::info!(usr, ?state, actor = %auth.claims.sub, "trader state changed");
     tx.commit().await.ok(); // dropping an uncommitted tx rolls back
-    Ok(Json(serde_json::json!({"usr_id": usr, "state": state})))
+    Ok(Json(TraderStateResponse {
+        usr_id: usr.to_string(),
+        state,
+    }))
 }
 #[utoipa::path(
     get,
     path = "/v1/limits",
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Configured limits", body = LimitsResponse),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -263,7 +337,7 @@ pub(crate) async fn set_trader_state(
 pub(crate) async fn list_limits(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<LimitsResponse>, (axum::http::StatusCode, String)> {
     let _a = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -273,13 +347,16 @@ pub(crate) async fn list_limits(
     )
     .await?;
     let snap = st.engine.current();
-    Ok(Json(serde_json::json!({"limits": snap.limits})))
+    Ok(Json(LimitsResponse {
+        limits: snap.limits.clone(),
+    }))
 }
 #[utoipa::path(
     post,
     path = "/v1/limits",
+    request_body = trade8::contracts::risk::LimitRow,
     responses(
-        (status = 200, description = "OK", body = serde_json::Value),
+        (status = 200, description = "Limit created", body = CreateLimitAck),
         (status = 401, description = "Not authenticated"),
         (status = 403, description = "Forbidden"),
     ),
@@ -291,7 +368,7 @@ pub(crate) async fn create_limit(
     State(st): State<Arc<RiskState>>,
     headers: axum::http::HeaderMap,
     Json(body): Json<trade8::contracts::risk::LimitRow>,
-) -> Result<Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+) -> Result<Json<CreateLimitAck>, (axum::http::StatusCode, String)> {
     let auth = sentin8::shell::verify_token(&st.core.config, &headers).await?;
     sentin8::shell::policy::require(
         &st.core.admin.policy,
@@ -325,7 +402,10 @@ pub(crate) async fn create_limit(
     snap.limits.push(body);
     st.engine.publish(snap);
     tx.commit().await.ok(); // dropping an uncommitted tx rolls back
-    Ok(Json(serde_json::json!({"id": id, "status": "ok"})))
+    Ok(Json(CreateLimitAck {
+        id,
+        status: "ok".into(),
+    }))
 }
 
 #[tokio::main]
