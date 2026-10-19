@@ -63,7 +63,7 @@ crate::openapi::w::risk_health,
     components(schemas()),
     security(),
     tags(
-        (name = "risk", description = "Trade8:Risk — pre-trade limits"),
+        (name = "risk", description = "Trade8:Risk - pre-trade limits"),
         (name = "trade8-admin", description = "Trade8 admin surface (RFW)"),
         (name = "policy", description = "Shield policy administration (shared surface)"),
     ),

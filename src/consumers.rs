@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Risk
 // SPDX-License-Identifier: Apache-2.0
 
-//! Risk bus consumers — risk design §7.
+//! Risk bus consumers - risk design §7.
 //!
 //! Four consumer groups over `trade8::client::run_consumer`:
 //! - **desk** family: `order:accepted/cancelled/rejected/…` → reserved-
@@ -16,7 +16,7 @@
 //!   trader-state transitions per the action ladder.
 //!
 //! All handlers mutate a cloned snapshot and swap it in (arc-swap whole
-//! generation — risk design §4). Idempotent: events carry the full
+//! generation - risk design §4). Idempotent: events carry the full
 //! envelope; mutations are keyed by (usr, symbol, order id) so
 //! redelivery converges.
 
@@ -28,7 +28,7 @@ use uuid::Uuid;
 
 use crate::core::RiskEngine;
 
-/// Track per-order reservations for release on terminal events — the
+/// Track per-order reservations for release on terminal events - the
 /// journaled buying-power accounting (reserved-notional accounting;
 /// crash recovery by order-event replay). Shared across consumer tasks.
 #[derive(Default)]
@@ -62,7 +62,7 @@ pub fn spawn_consumers(
         let group = format!("trade8:risk:{family}");
         tokio::spawn(async move {
             // Cert-presenting Bus client (CERTFREE-4V): the per-family
-            // workload CERTIFICATE is the identity — no DCR, no token;
+            // workload CERTIFICATE is the identity - no DCR, no token;
             // the mint retries while the fleet boots.
             let bus = loop {
                 match sentin8::bus::client::BusClient::for_workload(&bus_url, &auth_issuer, &group)
@@ -116,7 +116,7 @@ async fn handle_desk(
         .as_str()
         .and_then(|s| Uuid::parse_str(s).ok());
     let Some(order_id) = order_id else {
-        return HandleOutcome::Ack; // not an order event — nothing to do
+        return HandleOutcome::Ack; // not an order event - nothing to do
     };
     let usr = payload["usr_id"].as_str().unwrap_or_default().to_string();
     let qty = payload["qty"].as_u64().unwrap_or(0) as i128;
@@ -148,7 +148,7 @@ async fn handle_desk(
         | "trade8:desk:order:routed" => {
             // Terminal-ish states release the reservation + decrement the
             // open-order count (routed stays open at the venue but leaves
-            // the Desk book — counts Desk-book orders).
+            // the Desk book - counts Desk-book orders).
             let released = {
                 let mut j = journal.inner.lock().unwrap();
                 j.reserved.remove(&order_id)

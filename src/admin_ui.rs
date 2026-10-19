@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Risk
 // SPDX-License-Identifier: Apache-2.0
 
-//! Trade8:Risk admin UI — RFW page definitions + data endpoints.
+//! Trade8:Risk admin UI - RFW page definitions + data endpoints.
 //!
 //! Pages at `GET /v1/admin/ui/{page}` rendered by Sentin8:Dash. The
 //! trader-state board is step-up-auth-gated at the BFF; here the
@@ -73,7 +73,7 @@ fn card(title: &str, body: &str) -> RemoteWidget {
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/ui/{page}` — RFW definitions.
+/// `GET /v1/admin/ui/{page}` - RFW definitions.
 pub async fn get_admin_ui(
     State(_st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
@@ -179,7 +179,7 @@ type Qp = std::collections::HashMap<String, String>;
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/limits` — limit rows from the DB (source of truth).
+/// `GET /v1/admin/limits` - limit rows from the DB (source of truth).
 pub async fn admin_limits(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
@@ -240,7 +240,7 @@ pub async fn admin_limits(
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/traders` — trader risk states.
+/// `GET /v1/admin/traders` - trader risk states.
 pub async fn admin_traders(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
@@ -298,7 +298,7 @@ pub async fn admin_traders(
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/restrictions` — execution restriction rows.
+/// `GET /v1/admin/restrictions` - execution restriction rows.
 pub async fn admin_restrictions(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
@@ -368,7 +368,7 @@ pub async fn admin_restrictions(
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/levels` — risk level ladder + actions.
+/// `GET /v1/admin/levels` - risk level ladder + actions.
 pub async fn admin_levels(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,
@@ -425,7 +425,7 @@ pub async fn admin_levels(
     tag = "trade8-admin",
 )]
 
-/// `GET /v1/admin/exposure` — snapshot live exposure.
+/// `GET /v1/admin/exposure` - snapshot live exposure.
 pub async fn admin_exposure(
     State(st): State<std::sync::Arc<RiskState>>,
     headers: HeaderMap,

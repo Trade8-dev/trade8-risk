@@ -183,7 +183,7 @@ async fn bootstrap_snapshot_loads_all_sections() {
     let mkt = Uuid::new_v4();
     let mut tx = conn.begin().await.unwrap();
     sentin8::shell::set_tenant_context(&mut tx, env_a()).await;
-    // short_exempt/borrow FKs the symbol table — seed the market +
+    // short_exempt/borrow FKs the symbol table - seed the market +
     // symbol parents for the two fixture symbols.
     sqlx::query(
         r#"INSERT INTO desk.market (market_id, env_id, code, asset_class, timezone)
@@ -268,7 +268,7 @@ async fn bootstrap_snapshot_loads_all_sections() {
         .unwrap();
     tx.commit().await.unwrap();
 
-    // The bootstrap sets its own context — transaction-local, so it MUST
+    // The bootstrap sets its own context - transaction-local, so it MUST
     // run inside a tx to see the seeded rows (design DESIGN.md §5).
     let snap: RiskSnapshot = {
         let mut tx = conn.begin().await.unwrap();

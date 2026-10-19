@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Risk
 // SPDX-License-Identifier: Apache-2.0
 
-// Risk snapshot caches + the check pipeline — the stateless
+// Risk snapshot caches + the check pipeline - the stateless
 // `authorize` core. The HTTP surface and cache-invalidation consumers
 // live in main.rs; this module owns the pure verdict logic so it is
 // unit-testable without tokio.
@@ -49,7 +49,7 @@ pub struct RiskSnapshot {
     pub short_exempt: HashSet<uuid::Uuid>,
     /// Uptick rule mode per market: 'down' | 'updown' | 'up'.
     pub uptick_rule: HashMap<uuid::Uuid, u8>,
-    /// Print mirror from Feed: symbol_id → (last, prior) — the uptick
+    /// Print mirror from Feed: symbol_id → (last, prior) - the uptick
     /// inputs. Request-carried prints override when present.
     pub prints: HashMap<uuid::Uuid, (i128, i128)>,
     /// Open-order counts per user (mirrored from Desk events).
@@ -120,7 +120,7 @@ impl RiskEngine {
         let mut trace: Vec<CheckResult> = Vec::new();
         let state = snap.trader_state(&req.usr_id);
 
-        // 1. Trader state — closing-only may reduce, not open.
+        // 1. Trader state - closing-only may reduce, not open.
         let opening = req.intent == trade8::contracts::risk::Intent::Open;
         let state_ok = if opening {
             state.can_open()
@@ -377,7 +377,7 @@ impl RiskEngine {
                 }
             }
 
-            // 8. Short locate + uptick — only short-opening sides.
+            // 8. Short locate + uptick - only short-opening sides.
             if req.side_char == 'S' || req.side_char == 'T' {
                 let exempt = snap.short_exempt.contains(&req.symbol_id);
                 trace.push(CheckResult {
@@ -402,7 +402,7 @@ impl RiskEngine {
                             _ => snap.prints.get(&req.symbol_id).copied().unwrap_or((0, 0)),
                         };
                         let ok = if last == 0 && prior == 0 {
-                            true // no prints yet — no basis to block
+                            true // no prints yet - no basis to block
                         } else if mode == b'u' {
                             last > prior
                         } else {
@@ -598,7 +598,7 @@ mod tests {
                 currency: None,
                 kind: trade8::contracts::RiskLimitKind::BuyingPower,
                 // effectively unlimited without overflowing serde_json's
-                // f64 bridge (i128::MAX does — "number out of range")
+                // f64 bridge (i128::MAX does - "number out of range")
                 value: 1_000_000_000_000,
                 override_value: None,
                 disabled: false,
@@ -630,7 +630,7 @@ mod tests {
         r.market_id = mkt;
         r.side_char = 'S';
         r.last_print_raw = Some(90);
-        r.prior_print_raw = Some(100); // downtick — would fail 'up'
+        r.prior_print_raw = Some(100); // downtick - would fail 'up'
         assert!(eng.authorize(&r).allowed);
     }
 
@@ -694,7 +694,7 @@ mod tests {
         }));
         let mut r = req("ua", 10, 10_000);
         r.destination_id = dest;
-        r.tif = Some("3".into()); // ioc — not allowed
+        r.tif = Some("3".into()); // ioc - not allowed
         let v = eng.authorize(&r);
         assert!(!v.allowed);
         assert_eq!(
@@ -857,7 +857,7 @@ mod tests {
         let eng = RiskEngine::new();
         eng.publish(snap);
         // Replay against the SAME row contexts (fresh UUIDs per corpus
-        // call would test the wrong symbols — the classic trap).
+        // call would test the wrong symbols - the classic trap).
         let s1 = rows[0].1.unwrap();
         let d1 = rows[1].2.unwrap();
         let denied_user = rows[2].4.unwrap();

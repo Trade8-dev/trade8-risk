@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Risk
 // SPDX-License-Identifier: Apache-2.0
 
-//! Risk DB persistence — snapshot bootstrap + limit/trader-state writes
+//! Risk DB persistence - snapshot bootstrap + limit/trader-state writes
 //! with `limit:updated` / `trader:state` outbox events.
 //!
 //! The authorize hot path never touches the DB (arc-swap snapshot); this
@@ -56,7 +56,7 @@ fn trader_state_from(s: &str) -> TraderState {
 
 /// Snapshot bootstrap: limits + trader states + allowed symbols +
 /// blocked symbols/destinations from the restriction tables.
-/// Logged-not-fatal — an empty snapshot authorizes nothing extra.
+/// Logged-not-fatal - an empty snapshot authorizes nothing extra.
 pub async fn bootstrap_snapshot(conn: &mut PgConnection, env_id: Uuid) -> RiskSnapshot {
     match bootstrap_inner(conn, env_id).await {
         Ok(s) => s,
@@ -293,7 +293,7 @@ pub async fn persist_trader_state(
     .await
 }
 
-/// Outbox event insert — the shell relay drains this to the bus.
+/// Outbox event insert - the shell relay drains this to the bus.
 async fn insert_outbox_event(
     conn: &mut PgConnection,
     env_id: Uuid,

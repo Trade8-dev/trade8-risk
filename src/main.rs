@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Risk
 // SPDX-License-Identifier: Apache-2.0
 
-//! Trade8:Risk service binary — synchronous pre-trade authorization gate.
+//! Trade8:Risk service binary - synchronous pre-trade authorization gate.
 //!
 //! Design: `../risk/DESIGN.md`.
 //! Core logic in `core.rs`; this shell wires the tokio HTTP/TLS surface.
@@ -93,7 +93,7 @@ fn extend_router(app: Router<Arc<RiskState>>, _state: Arc<RiskState>) -> Router<
             "/v1/health",
             // Carries the binary's build identity (`version`/`build`,
             // BUILDID-1) so captain's monitor populates `make status`'s
-            // VERSION column — the consuming BINARY's identity.
+            // VERSION column - the consuming BINARY's identity.
             get(|| async { Json(serde_json::json!({"status": "ok", "service": "trade8:risk", "version": sentin8::build_info::id(), "build": sentin8::build_info::build_hash()})) }),
         )
 }
@@ -109,7 +109,7 @@ fn extend_router(app: Router<Arc<RiskState>>, _state: Arc<RiskState>) -> Router<
     tag = "risk",
 )]
 
-/// The hot-path authorize call. M2M-only (Desk / Func) — the BFF does not
+/// The hot-path authorize call. M2M-only (Desk / Func) - the BFF does not
 /// proxy this route; scope check enforces the service scope.
 pub(crate) async fn authorize(
     State(st): State<Arc<RiskState>>,
@@ -229,7 +229,7 @@ pub(crate) async fn set_trader_state(
         .await
         .map_err(sentin8::shell::err_db)?;
     sentin8::shell::set_tenant_context(&mut conn, env).await;
-    // RLS context is transaction-local (DESIGN.md §5) —
+    // RLS context is transaction-local (DESIGN.md §5) -
     // begin() pins the tenant context to the SAME tx as the DML/reads.
     let mut tx = match conn.begin().await {
         Ok(t) => t,
@@ -309,7 +309,7 @@ pub(crate) async fn create_limit(
         .await
         .map_err(sentin8::shell::err_db)?;
     sentin8::shell::set_tenant_context(&mut conn, env).await;
-    // RLS context is transaction-local (DESIGN.md §5) —
+    // RLS context is transaction-local (DESIGN.md §5) -
     // begin() pins the tenant context to the SAME tx as the DML/reads.
     let mut tx = match conn.begin().await {
         Ok(t) => t,

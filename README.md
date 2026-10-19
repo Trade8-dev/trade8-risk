@@ -1,4 +1,4 @@
-# README.md: Trade8:Risk — Pre-Trade Authorization Service
+# README.md: Trade8:Risk - Pre-Trade Authorization Service
 
 > Audience: anyone evaluating or onboarding to the service. For the
 > wire-level construction read `DESIGN.md`; for business functionality read
@@ -12,7 +12,7 @@ calls it over a direct TLS path before accepting any order mutation; it
 evaluates trader state, buying power (reserved-notional accounting), share/
 position/open-order limits, symbol/destination/market restrictions, market
 periods, order-class allowlists, short-locate exemptions, and the uptick
-rule — returning a single `authorize` verdict with an itemized check trace.
+rule - returning a single `authorize` verdict with an itemized check trace.
 The hot path never touches the database: every check reads `arc-swap`
 snapshot caches fed at boot and kept live by bus consumers.
 
@@ -25,16 +25,16 @@ Pre-trade gating has three properties that shape this design:
   inputs therefore live in memory as immutable snapshot generations.
 - **Determinism and auditability.** A deny must explain itself: every check
   appends an itemized result (limit, reserved, order notional, pass/fail) to
-  the verdict, which Desk journals on rejection — supervisors and support
+  the verdict, which Desk journals on rejection - supervisors and support
   desks can replay exactly why an order was refused.
 - **Separation of *decision* and *administration*.** Who may invoke the gate
   (Shield policy step, live role grants) is separate from the gate's µs-class
   math. Trading-state controls (closing-only, disable) are Risk-owned runtime
-  data — never identity mutations — so a supervisor can lock a trader down
+  data - never identity mutations - so a supervisor can lock a trader down
   immediately without touching Sentin8:Auth.
 
 Before the platform, these lived in the order-daemon's in-process limit
-objects with bespoke reload choreography — no shared tenancy, no auditable
+objects with bespoke reload choreography - no shared tenancy, no auditable
 deny trace, no event-driven freshness. Risk re-implements them as one
 stateless gate on the Sentin8 planes.
 
@@ -42,7 +42,7 @@ stateless gate on the Sentin8 planes.
 
 ```mermaid
 graph TD
-    subgraph callers[Callers — service trust boundary]
+    subgraph callers[Callers - service trust boundary]
         DESK[Trade8:Desk<br/>order submit/cancel]
         FN[sentin8:func<br/>strategy proxy-backs]
     end
@@ -68,20 +68,20 @@ observes the same generation discipline.
 
 ## 4. Key Traits and Data Structures
 
-- **`RiskState`** — shell core + the shared `RiskEngine`.
-- **`RiskEngine`** (`core.rs`) — `publish(snapshot)` / `current()` / the
+- **`RiskState`** - shell core + the shared `RiskEngine`.
+- **`RiskEngine`** (`core.rs`) - `publish(snapshot)` / `current()` / the
   `authorize(&AuthorizeRequest)` pipeline over `ArcSwap`.
-- **`RiskSnapshot`** — one immutable decision context: limits (six kinds,
+- **`RiskSnapshot`** - one immutable decision context: limits (six kinds,
   `LimitRow` with specificity binding user > office > env), trader states,
   blocked/allowed symbol sets, blocked destinations/markets, cancel-denial
   keys, per-destination order-type/TIF allowlists, halt/short-exempt sets,
   uptick rule per market, last/prior print mirror, open-order counts and
   reserved notional per trader.
-- **`ReservationJournal`** (`consumers.rs`) — the journaled buying-power
+- **`ReservationJournal`** (`consumers.rs`) - the journaled buying-power
   accounting: order id → reserved notional, (user, symbol) → position
   counters, symbol → last/prior print. Shared across consumer tasks behind a
   mutex; idempotent by order id so at-least-once redelivery converges.
-- **Contracts** — `trade8::contracts::risk::AuthorizeRequest`,
+- **Contracts** - `trade8::contracts::risk::AuthorizeRequest`,
   `AuthorizeVerdict`, `CheckResult`, `CheckKind`, `LimitRow`, plus the
   `TraderState` wire vocabulary.
 
@@ -114,7 +114,7 @@ observes the same generation discipline.
 - `reserved_notional` accounting is idempotent per order id: a redelivered
   `order:accepted` is a no-op; terminal desk events release exactly once.
 - Closing-only traders pass `can_close` and fail `can_open`; disabled states
-  fail both. The default state for an unknown trader is *active* — an
+  fail both. The default state for an unknown trader is *active* - an
   explicit disable row exists for every restricted trader.
 - Limit specificity: user > office > env; disabled rows never bind;
   `override_value` wins over `value` (`LimitRow::effective`).
@@ -122,24 +122,24 @@ observes the same generation discipline.
   `down` and print-less symbols never block; request-carried prints
   (Desk's fresher view) override the mirror.
 - Snapshot publishes are whole-generation: admin writes persist + emit an
-  outbox event, then swap; consumers clone-modify-swap the same way — no
+  outbox event, then swap; consumers clone-modify-swap the same way - no
   in-place mutation, no lost updates.
 - Persist writes run on a tx obtained via `begin()` after
   `set_tenant_context` (transaction-local RLS context, same connection).
 
 ## 7. Unresolved Questions / Future Designs
 
-- **Ladder ownership** — the risk-level ladder (`risk.level`, `risk.action`,
+- **Ladder ownership** - the risk-level ladder (`risk.level`, `risk.action`,
   `risk.level_action`) evaluates today from Pnl's summary event payload when
   it carries the ladder configuration; whether the ladder should instead be
   pushed into the snapshot at boot from the DB tables is an open design
   point.
-- **Per-currency buying power** — limits carry an asset-class/currency split
+- **Per-currency buying power** - limits carry an asset-class/currency split
   in the schema; the snapshot arithmetic is single-pool today.
-- **Step-up auth on trader-state writes** — the route is permission-gated
+- **Step-up auth on trader-state writes** - the route is permission-gated
   now; binding the platform's step-up (recent interaction / PIN re-entry)
   for high-impact supervisor actions is a platform-level design item.
-- **`trade8:risk:restriction:updated`** — the event constant exists but
+- **`trade8:risk:restriction:updated`** - the event constant exists but
   restriction mutations do not publish it yet (snapshot swaps are local);
   whether remote consumers need invalidation events is open.
 

@@ -3,7 +3,7 @@
 -- SPDX-FileCopyrightText: Copyright Contributors to the Trade8:Risk
 -- SPDX-License-Identifier: Apache-2.0
 
--- Trade8:Risk — pre-trade limits, trader state, restrictions, level ladder.
+-- Trade8:Risk - pre-trade limits, trader state, restrictions, level ladder.
 --
 -- Design: ../risk/DESIGN.md §6,
 -- ../../DESIGN.md §3 (data model) §2.4.
@@ -124,7 +124,7 @@ BEGIN
  EXECUTE format('ALTER TABLE %s ENABLE ROW LEVEL SECURITY', tbl);
  EXECUTE format('ALTER TABLE %s FORCE ROW LEVEL SECURITY', tbl);
  -- Suffix BEFORE %I quoting: `limit` alone is fine but the concatenation
- -- `"limit"_select` is invalid SQL — build 'limit_select' unquoted
+ -- `"limit"_select` is invalid SQL - build 'limit_select' unquoted
  -- (desk-store DO-block memory: reserved-word table names are the
  -- classic failure class).
  EXECUTE format('DROP POLICY IF EXISTS %1$I ON %2$s;
@@ -141,7 +141,7 @@ CREATE POLICY %1$I ON %2$s FOR DELETE USING (sentin8_context_initialized() AND e
  END LOOP;
 END $$;
 
--- Local outbox + audit journal (DBX §6.7 / §6.8 — shell-generated DDL).
+-- Local outbox + audit journal (DBX §6.7 / §6.8 - shell-generated DDL).
 CREATE TABLE IF NOT EXISTS risk.outbox (
  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
  env_id UUID NOT NULL,
@@ -210,7 +210,7 @@ CREATE POLICY audit_journal_dml ON risk.audit_journal
 
 -- ---------------------------------------------------------------------------
 -- Per-service role grants + search_path (bank8-ledger pattern; the CLI
--- creates the role BEFORE this SQL — grant-before-role incident rule).
+-- creates the role BEFORE this SQL - grant-before-role incident rule).
 -- Grants live in db trade8 (this database); the scope→role map row is
 -- upserted by `vertical enroll` from --section=pg_roles.
 -- ---------------------------------------------------------------------------
@@ -227,7 +227,7 @@ BEGIN
    GRANT USAGE, SELECT ON SEQUENCES TO trade8_risk_service;
  END IF;
 END $$;
--- Declared cross-schema reads (SELECT-only) — mirrors registration.rs
+-- Declared cross-schema reads (SELECT-only) - mirrors registration.rs
 -- PgRole.cross_schema_grants; `vertical enroll` owns their application,
 -- this block only re-asserts them idempotently after a role recreation.
 DO $$ BEGIN

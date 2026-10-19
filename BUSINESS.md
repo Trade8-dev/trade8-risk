@@ -1,4 +1,4 @@
-# Trade8:Risk — Business Requirements & Functionality
+# Trade8:Risk - Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating what
 > Trade8:Risk **does for the business**. For architecture read `README.md`;
@@ -7,7 +7,7 @@
 ## 1. Business Purpose
 
 - Protect the firm's capital: **no order mutates a position without passing
-  the pre-trade gate** — buying-power, exposure, and share-count limits are
+  the pre-trade gate** - buying-power, exposure, and share-count limits are
   enforced before acceptance, not reconciled after.
 - Give supervisors **instant control over a trader's ability to trade**
   (closing-only, disabled-by-risk/compliance) without touching their identity
@@ -80,7 +80,7 @@ halt mirrors), pnl trader summaries (loss-ladder evaluation).
 
 ## 5. Business Rules & Invariants
 
-1. Every order acceptance is preceded by an allow verdict from Risk —
+1. Every order acceptance is preceded by an allow verdict from Risk -
    enforced by Desk, which fails closed if Risk is unreachable.
 2. A deny always explains itself with the failed checks; the trace is
    retained with the rejected order.
@@ -88,7 +88,7 @@ halt mirrors), pnl trader summaries (loss-ladder evaluation).
    effect for the next authorization.
 4. Buying-power accounting converges exactly once per order lifecycle
    (reserve on accept; release on cancel/reject/replace/routed-leave).
-5. Trading-state changes never alter credentials or sign-in — they gate
+5. Trading-state changes never alter credentials or sign-in - they gate
    tradeability only.
 6. The gate is reachable only by services (M2M), never by end-user tokens.
 7. Restrictions bind at the most specific scope (user > office > env);
@@ -104,7 +104,7 @@ halt mirrors), pnl trader summaries (loss-ladder evaluation).
 | Trading supervisor | Stop a rogue trader with one action (closing-only/disable), with reason |
 | Compliance officer | Define cancel-denial windows; rely on deny traces for reports |
 | Desk operations | Verify why an order was denied (trace via blotter) |
-| Systems (Desk) | Call authorize before every acceptance — sub-ms verdict |
+| Systems (Desk) | Call authorize before every acceptance - sub-ms verdict |
 | Systems (Pnl) | Emit summaries that drive the loss ladder |
 
 ## 7. KPIs / Success Criteria
@@ -150,11 +150,11 @@ halt mirrors), pnl trader summaries (loss-ladder evaluation).
   (unknown traders treated as inactive) instead of the current
   active-by-default?
 - Multi-currency buying power: single-pool vs per-currency limits with
-  conversion — which is the intended first-class behavior?
+  conversion - which is the intended first-class behavior?
 - Should the loss ladder include automated *flattening* execution (currently
   delegated to desk tooling via strategies), and under whose approval?
 - What supervision UX should wrap cancel-denial windows (pre-market events,
-  news windows) — timed windows or manual toggles?
+  news windows) - timed windows or manual toggles?
 
 ---
 

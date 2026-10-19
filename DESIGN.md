@@ -1,4 +1,4 @@
-# Trade8:Risk — Detailed Design Document
+# Trade8:Risk - Detailed Design Document
 
 > Audience: maintainers, reviewers, and architects modifying the service.
 > Overview in `README.md`; business functionality in `BUSINESS.md`.
@@ -71,7 +71,7 @@ graph TD
     end
 ```
 
-### Request lifecycle — the authorize family (the only hot family)
+### Request lifecycle - the authorize family (the only hot family)
 
 ```mermaid
 sequenceDiagram
@@ -85,14 +85,14 @@ sequenceDiagram
     A->>S: verify token + require trade8:risk:authorize
     S-->>A: allow (live roles) / 403
     A->>E: authorize(&req)
-    E->>SN: current() — one generation
+    E->>SN: current() - one generation
     E->>E: 1 trader state → 2 symbol allowlist/blocked → 3 destination → 3b market → 3c cancel-denial → 3d order-type/TIF → (opens: 4 buying power → 5 open orders → 6 order shares → 7 position shares) → 8 short locate + uptick
     E-->>A: verdict {allowed, trace, remaining_bp} or {deny, code, trace}
     A-->>D: 200 verdict
     Note over D,SN: No DB touched, no cross-service calls on this path
 ```
 
-### Mutation lifecycle — limits / trader states
+### Mutation lifecycle - limits / trader states
 
 ```mermaid
 sequenceDiagram
@@ -125,13 +125,13 @@ erDiagram
     limit {
         uuid id PK
         uuid env_id
-        text usr_id "nullable — office/env scope rows null"
+        text usr_id "nullable - office/env scope rows null"
         text office_id "nullable"
         text asset_class "nullable"
         text currency "nullable"
         text kind "buying_power|max_order_shares|max_position_shares|max_position_value|max_open_orders|max_notional"
         bigint value
-        bigint override_value "nullable — wins over value"
+        bigint override_value "nullable - wins over value"
         boolean disabled
     }
     trader_state {
@@ -181,18 +181,18 @@ erDiagram
     action ||--o{ level_action : "wiring"
 ```
 
-- `risk.limit` — six `kind`s; scope columns nullable by design (env row =
+- `risk.limit` - six `kind`s; scope columns nullable by design (env row =
   default); `override_value` wins when non-null.
-- `risk.trader_state` — upsert per (env, usr); the *runtime* trading state,
+- `risk.trader_state` - upsert per (env, usr); the *runtime* trading state,
   not identity. Never written by Auth.
-- `risk.level_action` — the threshold ladder wiring evaluated from Pnl
+- `risk.level_action` - the threshold ladder wiring evaluated from Pnl
   summaries.
 - No state machines: rows are current-state upserts; history lives in the
   audit journal.
 
 ## 4. API Surface
 
-### Service-facing (M2M only — not proxied by BFF)
+### Service-facing (M2M only - not proxied by BFF)
 
 | Endpoint | Gate | Notes |
 |---|---|---|
@@ -203,7 +203,7 @@ erDiagram
 | Endpoint | Gate | Events |
 |---|---|---|
 | `GET /v1/limits` · `POST /v1/limits` | `trade8:risk:limits:read` / `:write` | `trade8:risk:limit:updated` (on POST) |
-| `GET /v1/trader-state` · `GET /v1/trader-state/{usr_id}` | `trade8:risk:limits:read` | — |
+| `GET /v1/trader-state` · `GET /v1/trader-state/{usr_id}` | `trade8:risk:limits:read` | - |
 | `POST /v1/trader-state` | `trade8:risk:trader:state:write` | `trade8:risk:trader:state` |
 
 ### Admin (RFW `GET /v1/admin/ui/{page}` + data endpoints)
@@ -241,20 +241,20 @@ sequenceDiagram
 
 ## 5. Cross-Cutting Concerns
 
-- **AuthN/AuthZ** — full 8-step pipeline; Shield decides (`require` with
+- **AuthN/AuthZ** - full 8-step pipeline; Shield decides (`require` with
   `trade8:risk:*` targets); JWT `scope` only pre-filters.
-- **Tenant resolution + RLS** — mutations: `set_tenant_context` then
+- **Tenant resolution + RLS** - mutations: `set_tenant_context` then
   `begin()` on the same connection; bootstrap loads run on the boot-env
   context; explicit `WHERE env_id = $1` everywhere; `desk.short_exempt`
   read is a *declared* cross-schema grant only.
-- **Idempotency** — reservation accounting keyed by order id; limit/
+- **Idempotency** - reservation accounting keyed by order id; limit/
   trader-state writes are idempotent upserts; consumer redelivery converges.
-- **Audit journaling** — local `risk.audit_journal` (same tx) → Sys
+- **Audit journaling** - local `risk.audit_journal` (same tx) → Sys
   ingest retry; deny-trace persistence is Desk's responsibility.
-- **Fail-safety** — snapshot bootstrap is logged-not-fatal (empty snapshot
+- **Fail-safety** - snapshot bootstrap is logged-not-fatal (empty snapshot
   authorizes nothing extra: no limits means no limit denies, but trader
-  states/restrictions also default-open — see Open Questions).
-- **TLS** — post-quantum via `sentin8-tls`; M2M cert-bound (`trade8:risk-{leaf}`-style workloads + `-tls` instance-read workload).
+  states/restrictions also default-open - see Open Questions).
+- **TLS** - post-quantum via `sentin8-tls`; M2M cert-bound (`trade8:risk-{leaf}`-style workloads + `-tls` instance-read workload).
 
 ## 6. Failure Modes & Recovery
 
@@ -275,7 +275,7 @@ flowchart TD
 
 - **Risk down** → Desk fails closed (order rejected, nothing persisted).
 - **Snapshot bootstrap failure** → logged, empty snapshot installed; the
-  service still serves verdicts (empty limits bind nothing) — operator
+  service still serves verdicts (empty limits bind nothing) - operator
   alerting owns the gap.
 - **Outbox/relay outage** → mutation is durable and locally effective;
   remote instances refresh late (eventual consistency documented in §8).
@@ -306,14 +306,14 @@ graph LR
 1. The authorize path performs no DB access, no cross-service HTTP, and no
    allocation-heavy work beyond the trace.
 2. Unknown traders default to *active*: Risk authorizes by explicit
-   restriction, never by absent permission — an env that wants
+   restriction, never by absent permission - an env that wants
    allow-list-only traders must seed `risk.trader_state` (documented
-   alternative: an env-level `closed` default flag — open question).
+   alternative: an env-level `closed` default flag - open question).
 3. Limit rows bind only when enabled (disabled rows skipped), specificity
    user > office > env.
 4. A deny is never "silent": every deny carries a machine-readable
    `RejectCode` and a full check trace.
-5. Trader-state changes are Risk data only — zero writes to any identity
+5. Trader-state changes are Risk data only - zero writes to any identity
    store.
 6. No `unsafe` blocks. `ArcSwap` guarantees the read-consistency invariant;
    the journal mutex is scoped to map operations only (no snapshot swaps
@@ -333,7 +333,7 @@ graph TD
   cancel-denial windows, uptick modes, allowed-list semantics.
 - `tests/sql_matrix.rs` (skip-offline): RLS matrix (no-context/cross-env →
   0 rows), `bootstrap_snapshot` all-sections load (limits/states/allowed/
-  restrictions/uptick/exempt — disabled excluded), `persist_limit`,
+  restrictions/uptick/exempt - disabled excluded), `persist_limit`,
   trader-state upsert + outbox events.
 - `tests/policy.rs`: the shared Shield suites (no-set deny, shadow never
   blocks, M2M parity, live-role freshness, mirror parity).
@@ -342,16 +342,16 @@ graph TD
 
 ## 10. Open Questions
 
-- **Fail-open default for unrestricted traders** — an env without seeded
+- **Fail-open default for unrestricted traders** - an env without seeded
   states authorizes everything; a `default_trader_state` env setting
   (deny-by-default) is a real option and needs a product decision.
-- **Multi-currency buying power** — the schema carries the columns; the
+- **Multi-currency buying power** - the schema carries the columns; the
   single-pool arithmetic needs a conversion design (`desk.currency` rates).
-- **Ladder persistence in snapshot** — move ladder thresholds from
+- **Ladder persistence in snapshot** - move ladder thresholds from
   payload-carried to boot-loaded (and hot-swapped on `limit:updated`).
-- **Restriction invalidation events** — publish
+- **Restriction invalidation events** - publish
   `trade8:risk:restriction:updated` for multi-instance freshness.
-- **`max_orders_restriction` enforcement point** — table + registration
+- **`max_orders_restriction` enforcement point** - table + registration
   exist; the check pipeline currently uses `max_open_orders` only.
 
 ---
