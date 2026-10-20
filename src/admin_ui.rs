@@ -214,17 +214,18 @@ pub async fn admin_limits(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(rows
-        .into_iter()
-        .map(
-            |(usr_id, office_id, kind, value, override_value, disabled)| {
-                serde_json::json!({
-                    "usr_id": usr_id, "office_id": office_id, "kind": kind,
-                    "value": value, "override_value": override_value, "disabled": disabled,
-                })
-            }
-        )
-        .collect::<Vec<_>>()))
+    Ok(Json(
+        rows.into_iter()
+            .map(
+                |(usr_id, office_id, kind, value, override_value, disabled)| {
+                    serde_json::json!({
+                        "usr_id": usr_id, "office_id": office_id, "kind": kind,
+                        "value": value, "override_value": override_value, "disabled": disabled,
+                    })
+                },
+            )
+            .collect::<Vec<_>>(),
+    ))
 }
 #[utoipa::path(
     get,
@@ -274,15 +275,16 @@ pub async fn admin_traders(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(rows
-        .into_iter()
-        .map(|(usr_id, state, reason, set_by, at)| {
-            serde_json::json!({
-                "usr_id": usr_id, "state": state, "reason": reason,
-                "set_by": set_by, "at": at,
+    Ok(Json(
+        rows.into_iter()
+            .map(|(usr_id, state, reason, set_by, at)| {
+                serde_json::json!({
+                    "usr_id": usr_id, "state": state, "reason": reason,
+                    "set_by": set_by, "at": at,
+                })
             })
-        })
-        .collect::<Vec<_>>()))
+            .collect::<Vec<_>>(),
+    ))
 }
 #[utoipa::path(
     get,
@@ -341,18 +343,19 @@ pub async fn admin_restrictions(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(rows
-        .into_iter()
-        .map(
-            |(level, level_id, restriction, symbol_id, destination_id, disabled)| {
-                serde_json::json!({
-                    "level": level, "level_id": level_id, "restriction": restriction,
-                    "symbol_id": symbol_id, "destination_id": destination_id,
-                    "disabled": disabled,
-                })
-            }
-        )
-        .collect::<Vec<_>>()))
+    Ok(Json(
+        rows.into_iter()
+            .map(
+                |(level, level_id, restriction, symbol_id, destination_id, disabled)| {
+                    serde_json::json!({
+                        "level": level, "level_id": level_id, "restriction": restriction,
+                        "symbol_id": symbol_id, "destination_id": destination_id,
+                        "disabled": disabled,
+                    })
+                },
+            )
+            .collect::<Vec<_>>(),
+    ))
 }
 #[utoipa::path(
     get,
@@ -401,15 +404,16 @@ pub async fn admin_levels(
     .fetch_all(&mut *conn)
     .await
     .map_err(sentin8::shell::err_db)?;
-    Ok(Json(rows
-        .into_iter()
-        .map(|(level_id, threshold, actions)| {
-            serde_json::json!({
-                "level_id": level_id, "threshold": threshold,
-                "actions": actions.split(',').collect::<Vec<_>>(),
+    Ok(Json(
+        rows.into_iter()
+            .map(|(level_id, threshold, actions)| {
+                serde_json::json!({
+                    "level_id": level_id, "threshold": threshold,
+                    "actions": actions.split(',').collect::<Vec<_>>(),
+                })
             })
-        })
-        .collect::<Vec<_>>()))
+            .collect::<Vec<_>>(),
+    ))
 }
 #[utoipa::path(
     get,

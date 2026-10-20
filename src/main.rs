@@ -13,8 +13,8 @@
 mod admin_ui;
 mod consumers;
 mod core;
-mod registration;
 mod openapi;
+mod registration;
 mod store;
 
 use sqlx::Acquire;
@@ -258,10 +258,7 @@ pub(crate) async fn trader_state_one(
     .await?;
     let snap = st.engine.current();
     let state = snap.trader_state(&usr_id);
-    Ok(Json(TraderStateResponse {
-        usr_id,
-        state,
-    }))
+    Ok(Json(TraderStateResponse { usr_id, state }))
 }
 
 #[utoipa::path(
