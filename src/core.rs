@@ -648,9 +648,9 @@ mod tests {
         assert_eq!(v.reject_code.as_deref(), Some("trade8_market_halted"));
     }
 
-    // ------------------------------------------------------------------
+    // ---------------------------------------------------------------
     // blocked markets, cancel denial, order-class/TIF
-    // ------------------------------------------------------------------
+    // ---------------------------------------------------------------
 
     #[test]
     fn blocked_market_denies() {
@@ -726,10 +726,10 @@ mod tests {
         assert_eq!(v.reject_code.as_deref(), Some("trade8_risk_uptick_rule"));
     }
 
-    // ------------------------------------------------------------------
+    // ---------------------------------------------------------------
     // Latency harness: authorize P99 < 1 ms with a 10k-symbol
     // catalog loaded (risk design §9).
-    // ------------------------------------------------------------------
+    // ---------------------------------------------------------------
 
     #[test]
     fn authorize_latency_p99_under_1ms_with_10k_catalog() {
@@ -773,11 +773,11 @@ mod tests {
         );
     }
 
-    // ------------------------------------------------------------------
+    // ---------------------------------------------------------------
     // Corpus differential test.
     // The restriction kinds replay against the check
     // pipeline; every seeded row must produce the identical verdict.
-    // ------------------------------------------------------------------
+    // ---------------------------------------------------------------
 
     /// One corpus row: (restriction, symbol?, destination?, market?,
     /// level_id, value, expected_deny).
