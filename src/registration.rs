@@ -9,7 +9,6 @@
 //! `sentin8-service-self-registration-design.md`). Scopes per master
 //! design §9; pages per risk design §8.
 
-use utoipa::OpenApi;
 
 use sentin8::registration::{
     AdminScope, AdminUi, AdminUiPage, CrossSchemaGrant, ErrorCode, M2mGrant, PgRole, PolicySetDecl,
