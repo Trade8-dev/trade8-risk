@@ -6,7 +6,8 @@
       "telemetry_property": {
         "slug": "risk",
         "name": "Trade8:Risk Telemetry"
-      }
+      },
+      "exposure": "internal"
     }
   ]
 }
